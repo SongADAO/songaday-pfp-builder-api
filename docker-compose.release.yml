@@ -1,0 +1,22 @@
+version: '3.7'
+
+x-default-build:
+    &default-build
+    build: .
+
+services:
+    pfpbuilderapi-latest:
+        << : *default-build
+        image: songadao/pfpbuilderapi:latest
+
+    pfpbuilderapi-major:
+        << : *default-build
+        image: songadao/pfpbuilderapi:1
+
+    pfpbuilderapi-minor:
+        << : *default-build
+        image: songadao/pfpbuilderapi:1.0
+
+    pfpbuilderapi-patch:
+        << : *default-build
+        image: songadao/pfpbuilderapi:1.0.0

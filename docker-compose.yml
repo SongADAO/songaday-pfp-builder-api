@@ -1,0 +1,9 @@
+version: '3.7'
+
+services:
+  pfpbuilderapi:
+    image: pfpbuilderapi
+    build: .
+    env_file:
+        - .env
+

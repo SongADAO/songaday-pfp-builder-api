@@ -1,0 +1,6 @@
+black>=22.3
+fastapi>=0.75
+Pillow>=9.0
+gunicorn>=20.0
+uvicorn[standard]>=0.15
+web3>=5.28
