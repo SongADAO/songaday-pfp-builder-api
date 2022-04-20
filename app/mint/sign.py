@@ -16,11 +16,11 @@ def sign(
         abi=MINT_CONTRACT_ABI,
     )
 
-    attributeAlreadyInUse: bool = contract.functions.tokenAttributeExists(
+    attribute_already_in_use: bool = contract.functions.tokenAttributeExists(
         traits_bytes32,
     ).call()
 
-    if attributeAlreadyInUse == True:
+    if attribute_already_in_use == True:
         raise Exception("Attribute combination already in use")
 
     hash_to_sign: bytes = contract.functions.getTokenURIAndAttributeHash(
