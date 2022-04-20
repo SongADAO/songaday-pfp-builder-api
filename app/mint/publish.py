@@ -89,6 +89,7 @@ def create_image(
             trait_layer_file_name,
             trait_layer_file_ext,
         )
+
         image = Image.open(image_path).convert("RGBA")
         composite_image.paste(image, (0, 0), image)
 
@@ -149,7 +150,6 @@ def pin_file_to_ipfs(
         ),
         "pinataOptions": json.dumps({"cidVersion": 1}),
     }
-    # print(data)
 
     response: requests.Response = requests.post(
         url=pinata_api_url, headers=headers, files=files, data=data
@@ -182,20 +182,27 @@ def publish(
         "traitsHex": traits_hex,
     }
 
+    # Get image and metadata paths
     paths: ResourcePaths = get_paths(traits_hex)
 
+    # Create image
     image_path: str = create_image(paths, image_file_name, traits)
 
+    # PIN image
     image_ipfs_hash: str = pin_file_to_ipfs(image_path, image_name, keyvalues)
 
+    # Create metadata
     metadata_path: str = create_metadata(
         paths, metadata_file_name, attributes, image_ipfs_hash
     )
 
+    # Pin metadata
     metadata_ipfs_hash: str = pin_file_to_ipfs(metadata_path, metadata_name, keyvalues)
 
+    # Convert metadata hash to Base16
     metadata_ipfs_hash_base16: str = ipfs_hash_to_base16(metadata_ipfs_hash)
 
+    # Convert base16 metadata hash to Bytes32
     metadata_ipfs_hash_base16_bytes32: str = ipfs_hash_base16_to_bytes32(
         metadata_ipfs_hash_base16
     )
