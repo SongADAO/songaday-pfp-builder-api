@@ -156,10 +156,15 @@ def pin_file_to_ipfs(
     )
 
     if response.ok == False:
-        raise Exception("Failed to PIN to IPFS: {}".format(name))
+        print("Failed to PIN to IPFS: {}".format(name))
+        raise Exception("Failed to PIN to IPFS")
 
     responseJson: PinataResponse = response.json()
     print(response.json())
+
+    if type(responseJson) is not dict or "IpfsHash" not in responseJson:
+        print("Failed to get IPFS hash: {}".format(name))
+        raise Exception("Failed to get IPFS hash")
 
     return responseJson["IpfsHash"]
 
