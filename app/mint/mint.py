@@ -35,13 +35,3 @@ def mint(input_traits: InputTraits) -> MintResponse:
         "published": published,
         "signature": signature,
     }
-
-
-# def mint(input_traits: InputTraits):
-#     signature: str = sign(
-#         "0x0000000000000000000000000000000000000000000000000001010101010101",
-#         "0x6f0b9c69c458c67dac691aa995ac247b4200d2ffe8dd86088ab7b6099a640f65",
-#     )
-#     print(signature)
-
-#     return {"signature": signature}
