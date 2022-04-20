@@ -1,6 +1,6 @@
-import json
+import ast, json
 from fastapi import APIRouter, Request, Body, HTTPException
-from typing import Dict
+from typing import Dict, Union
 from .config import URL_PREFIX
 from ..mint.mint import mint
 from ..mint.typings import InputTraits
@@ -16,29 +16,73 @@ router = APIRouter(
 # https://idchain.songadao.org/songadao-pfp-builder-api/mint/?traits={"base":"acapella","head":"airport","mood":"angry","beard":"beard","glasses":"hiphop","bottom":"acousticguitar","top":"baltimore"}
 
 
+def format_error(error: Union[str, Dict[str, str], Exception]):
+    code = 0
+    message = str(error)
+
+    print(str(error))
+
+    try:
+        error = ast.literal_eval(str(error))
+    except Exception:
+        pass
+
+    if (type(error) is dict) and ("code" in error):
+        code = error["code"]
+
+    if (type(error) is dict) and ("message" in error):
+        message = error["message"]
+
+    print(code)
+    print(message)
+
+    return {"code": code, "message": message}
+
+
+def error400(error: Union[str, Dict[str, str], Exception]):
+    raise HTTPException(status_code=400, detail=format_error(error))
+
+
 @router.get("/")
 async def mint_get(req: Request):
-    request_args: Dict[str, str] = dict(req.query_params)
-    print(request_args)
+    payload: Dict[str, str] = dict(req.query_params)
 
-    input_traits_str: str = request_args["traits"]
-    print(input_traits_str)
+    if type(payload) is not dict:
+        error400("Missing request parameters")
 
-    input_traits: InputTraits = json.loads(input_traits_str)
-    print(input_traits)
+    if "traits" not in payload:
+        error400("Missing traits parameter")
 
-    mint_data = mint(input_traits)
+    try:
+        input_traits: InputTraits = json.loads(payload["traits"])
+        print(input_traits)
+    except:
+        error400("Malformed traits parameter")
 
-    return {"success": True, "data": mint_data}
+    try:
+        mint_data = mint(input_traits)
+
+        return {"data": mint_data}
+    except Exception as error:
+        error400(error)
 
 
 @router.post("/")
 async def mint_post(payload: Dict[str, InputTraits] = Body(...)):
     print(payload)
 
+    if type(payload) is not dict:
+        error400("Missing request parameters")
+
+    if "traits" not in payload:
+        error400("Missing traits parameter")
+
     input_traits: InputTraits = payload["traits"]
     print(input_traits)
 
-    mint_data = mint(input_traits)
+    try:
+        mint_data = mint(input_traits)
 
-    return {"success": True, "data": mint_data}
+        return {"data": mint_data}
+    except Exception as error:
+        error400(error)
