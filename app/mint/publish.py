@@ -65,8 +65,8 @@ def create_image(
     output_path: str = "{}/{}".format(paths["output"], file_name)
 
     # Get the blank first layer. This is used for sizing.
-    placeholder_image_path: str = "{}/placeholder.png".format(paths["input"])
-    image = Image.open(placeholder_image_path).convert("RGBA")
+    base_image_path: str = "{}/base.png".format(paths["input"])
+    image = Image.open(base_image_path).convert("RGBA")
 
     # Start the new composite image with the blank layer
     composite_image = Image.new("RGBA", image.size)
