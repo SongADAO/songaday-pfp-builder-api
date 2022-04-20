@@ -69,7 +69,7 @@ def create_image(
     image = Image.open(base_image_path).convert("RGBA")
 
     # Start the new composite image with the blank layer
-    composite_image = Image.new("RGBA", image.size)
+    composite_image = Image.new("RGB", image.size)
     composite_image.paste(image, (0, 0), image)
 
     # Add each attribute's layer
