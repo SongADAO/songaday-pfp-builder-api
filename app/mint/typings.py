@@ -1,3 +1,7 @@
+"""
+Minting typings
+"""
+
 import io
 from typing import Dict, Literal, TypedDict
 

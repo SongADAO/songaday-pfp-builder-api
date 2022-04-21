@@ -1,14 +1,36 @@
-import base64, pathlib, json, requests, math
+"""
+Handle generating an image and metadata and pinning them to IPFS
+"""
+
+import base64
+import json
+import math
+import pathlib
 from datetime import datetime
+import requests
 from PIL import Image
 from .config import MINT_RESOURCE_PATH, PINATA_API_KEY, PINATA_SECRET_API_KEY
-from .typings import *
+from .typings import (
+    Attributes,
+    MetaData,
+    PinataFiles,
+    PinataHeaders,
+    PinataKeyValues,
+    PinataResponse,
+    PublishResponse,
+    ResourcePaths,
+    Traits,
+)
 
 
 def ipfs_hash_to_base16(ipfs_hash: str) -> str:
+    """
+    Convert an IPFS hash to Base16
+    """
+
     ipfs_hash_upper: str = ipfs_hash.upper()
 
-    if ipfs_hash_upper.startswith("B") == False:
+    if not ipfs_hash_upper.startswith("B"):
         raise Exception("Invalid IPFS Hash Prefix")
 
     ipfs_hash_upper_no_prefix: str = ipfs_hash_upper[1:]
@@ -25,17 +47,21 @@ def ipfs_hash_to_base16(ipfs_hash: str) -> str:
         ipfs_hash_upper_no_prefix_padded
     )
 
-    ipfs_hash_base16_bytes: bytes = base64.b16encode(ipfs_hash_upper_no_prefix_bytes)
+    ipfs_hash_base16_bytes: bytes = base64.b16encode(
+        ipfs_hash_upper_no_prefix_bytes,
+    )
 
-    ipfs_hash_base16: str = "f" + ipfs_hash_base16_bytes.decode("utf-8").lower()
-
-    return ipfs_hash_base16
+    return "f" + ipfs_hash_base16_bytes.decode("utf-8").lower()
 
 
 def ipfs_hash_base16_to_bytes32(ipfs_hash_base16: str) -> str:
+    """
+    Get image and metadata input/output folders
+    """
+
     ipfs_hash_base16_upper: str = ipfs_hash_base16.upper()
 
-    if ipfs_hash_base16_upper.startswith("F01551220") == False:
+    if not ipfs_hash_base16_upper.startswith("F01551220"):
         raise Exception("Invalid IPFS Hash Prefix")
 
     ipfs_hash_base16_bytes32: str = "0x" + ipfs_hash_base16_upper[9:].lower()
@@ -44,19 +70,17 @@ def ipfs_hash_base16_to_bytes32(ipfs_hash_base16: str) -> str:
 
 
 def get_paths(output_folder_name: str) -> ResourcePaths:
+    """
+    Get image and metadata input/output folders
+    """
+
     resource_path: str = MINT_RESOURCE_PATH
 
     timestamp = datetime.timestamp(datetime.now())
 
     paths: ResourcePaths = {
-        "input": "{}/input".format(
-            resource_path,
-        ),
-        "output": "{}/output/{}/{}".format(
-            resource_path,
-            output_folder_name,
-            timestamp,
-        ),
+        "input": f"{resource_path}/input",
+        "output": f"{resource_path}/output/{output_folder_name}/{timestamp}",
     }
 
     # Create directory if it doesn't exist
@@ -70,11 +94,15 @@ def create_image(
     file_name: str,
     traits: Traits,
 ) -> str:
+    """
+    Generate NFT image
+    """
+
     # Setup paths
-    output_path: str = "{}/{}".format(paths["output"], file_name)
+    output_path: str = f"{paths['output']}/{file_name}"
 
     # Get the blank first layer. This is used for sizing.
-    base_image_path: str = "{}/base.png".format(paths["input"])
+    base_image_path: str = f"{paths['input']}/base.png"
     image = Image.open(base_image_path).convert("RGBA")
 
     # Start the new composite image with the blank layer
@@ -85,19 +113,23 @@ def create_image(
     for trait in traits:
         trait_layer_folder_name: str = trait["name"].lower()
 
-        trait_layer_id_number: str = str(trait["option"]["id"]).lower().rjust(3, "0")
+        trait_layer_id_number: str = str(trait["option"]["id"]).lower()
+
+        trait_layer_id_number_padded: str = trait_layer_id_number.rjust(3, "0")
 
         trait_layer_file_name: str = trait["option"]["name"].lower()
 
         trait_layer_file_ext: str = trait["option"]["ext"].lower()
 
+        # pylint: disable=consider-using-f-string
         image_path: str = "{}/{}/{}-{}.{}".format(
             paths["input"],
             trait_layer_folder_name,
-            trait_layer_id_number,
+            trait_layer_id_number_padded,
             trait_layer_file_name,
             trait_layer_file_ext,
         )
+        # pylint: enable=consider-using-f-string
 
         image = Image.open(image_path).convert("RGBA")
         composite_image.paste(image, (0, 0), image)
@@ -114,11 +146,15 @@ def create_metadata(
     attributes: Attributes,
     image_ipfs_hash: str,
 ) -> str:
+    """
+    Generate NFT metadata
+    """
+
     # Setup paths
-    output_path: str = "{}/{}".format(paths["output"], file_name)
+    output_path: str = f"{paths['output']}/{file_name}"
 
     # Make IPFS Hash a URL
-    image_ipfs_url: str = "ipfs://{}".format(image_ipfs_hash)
+    image_ipfs_url: str = f"ipfs://{image_ipfs_hash}"
 
     # Assemble metadata
     metadata: MetaData = {
@@ -129,7 +165,7 @@ def create_metadata(
     }
 
     # Write the metadata to disk
-    with open(output_path, "w") as outfile:
+    with open(output_path, "w", encoding="utf-8") as outfile:
         json.dump(metadata, outfile)
 
     return output_path
@@ -140,6 +176,10 @@ def pin_file_to_ipfs(
     name: str,
     keyvalues: PinataKeyValues,
 ) -> str:
+    """
+    Pin a file to IPFS
+    """
+
     pinata_api_url: str = "https://api.pinata.cloud/pinning/pinFileToIPFS"
 
     files: PinataFiles = [
@@ -161,21 +201,24 @@ def pin_file_to_ipfs(
     }
 
     response: requests.Response = requests.post(
-        url=pinata_api_url, headers=headers, files=files, data=data
+        url=pinata_api_url,
+        headers=headers,
+        files=files,
+        data=data,
     )
 
-    if response.ok == False:
-        print("Failed to PIN to IPFS: {}".format(name))
+    if response.ok is False:
+        print(f"Failed to PIN to IPFS: {name}")
         raise Exception("Failed to PIN to IPFS")
 
-    responseJson: PinataResponse = response.json()
+    response_json: PinataResponse = response.json()
     print(response.json())
 
-    if type(responseJson) is not dict or "IpfsHash" not in responseJson:
-        print("Failed to get IPFS hash: {}".format(name))
+    if "IpfsHash" not in response_json or response_json["IpfsHash"] == "":
+        print(f"Failed to get IPFS hash: {name}")
         raise Exception("Failed to get IPFS hash")
 
-    return responseJson["IpfsHash"]
+    return response_json["IpfsHash"]
 
 
 def publish(
@@ -183,10 +226,14 @@ def publish(
     attributes: Attributes,
     traits_hex: str,
 ) -> PublishResponse:
+    """
+    Generate an image and metadata and pin them to IPFS
+    """
+
     metadata_file_name: str = "metadata.json"
     image_file_name: str = "image.png"
-    metadata_name: str = "{}-{}".format(traits_hex, metadata_file_name)
-    image_name: str = "{}-{}".format(traits_hex, image_file_name)
+    metadata_name: str = f"{traits_hex}-{metadata_file_name}"
+    image_name: str = f"{traits_hex}-{image_file_name}"
     keyvalues: PinataKeyValues = {
         "traitsHex": traits_hex,
     }
@@ -195,25 +242,42 @@ def publish(
     paths: ResourcePaths = get_paths(traits_hex)
 
     # Create image
-    image_path: str = create_image(paths, image_file_name, traits)
+    image_path: str = create_image(
+        paths,
+        image_file_name,
+        traits,
+    )
 
     # PIN image
-    image_ipfs_hash: str = pin_file_to_ipfs(image_path, image_name, keyvalues)
+    image_ipfs_hash: str = pin_file_to_ipfs(
+        image_path,
+        image_name,
+        keyvalues,
+    )
 
     # Create metadata
     metadata_path: str = create_metadata(
-        paths, metadata_file_name, attributes, image_ipfs_hash
+        paths,
+        metadata_file_name,
+        attributes,
+        image_ipfs_hash,
     )
 
     # Pin metadata
-    metadata_ipfs_hash: str = pin_file_to_ipfs(metadata_path, metadata_name, keyvalues)
+    metadata_ipfs_hash: str = pin_file_to_ipfs(
+        metadata_path,
+        metadata_name,
+        keyvalues,
+    )
 
     # Convert metadata hash to Base16
-    metadata_ipfs_hash_base16: str = ipfs_hash_to_base16(metadata_ipfs_hash)
+    metadata_ipfs_hash_base16: str = ipfs_hash_to_base16(
+        metadata_ipfs_hash,
+    )
 
     # Convert base16 metadata hash to Bytes32
     metadata_ipfs_hash_base16_bytes32: str = ipfs_hash_base16_to_bytes32(
-        metadata_ipfs_hash_base16
+        metadata_ipfs_hash_base16,
     )
 
     return {

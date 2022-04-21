@@ -1,3 +1,7 @@
+"""
+Minting contract ABI
+"""
+
 MINT_CONTRACT_ABI = [
     {
         "inputs": [

@@ -1,15 +1,29 @@
+"""
+Handle generating, pinning and signing an image and metadata for a NFT mint
+"""
+
 from .attributes import (
     input_traits_to_traits,
+    trait_hex_to_decimal,
     traits_to_attributes,
     traits_to_hex,
-    trait_hex_to_decimal,
 )
 from .publish import publish
 from .sign import sign
-from .typings import Traits, Attributes, PublishResponse, MintResponse, InputTraits
+from .typings import (
+    Attributes,
+    InputTraits,
+    MintResponse,
+    PublishResponse,
+    Traits,
+)
 
 
 def mint(input_traits: InputTraits) -> MintResponse:
+    """
+    Take a set of traits, generate the image and metadata, and sign it
+    """
+
     traits: Traits = input_traits_to_traits(input_traits)
     print(traits)
 
@@ -25,7 +39,10 @@ def mint(input_traits: InputTraits) -> MintResponse:
     published: PublishResponse = publish(traits, attributes, traits_hex)
     print(published)
 
-    signature: str = sign(published["metadata_ipfs_hash_base16_bytes32"], traits_hex)
+    signature: str = sign(
+        published["metadata_ipfs_hash_base16_bytes32"],
+        traits_hex,
+    )
 
     return {
         "traits": traits,

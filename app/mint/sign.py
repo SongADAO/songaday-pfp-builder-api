@@ -1,7 +1,15 @@
+"""
+Handle signing a metadata hash and trait hex for minting
+"""
+
 from eth_account import Account, messages
 from eth_account.datastructures import SignedMessage
 from web3 import Web3
-from .config import MINT_RPC_URL, MINT_CONTRACT_ADDRESS, MINT_SIGNER_PRIVATE_KEY
+from .config import (
+    MINT_RPC_URL,
+    MINT_CONTRACT_ADDRESS,
+    MINT_SIGNER_PRIVATE_KEY,
+)
 from .abi import MINT_CONTRACT_ABI
 
 
@@ -9,9 +17,13 @@ def sign(
     metadata_ipfs_hash_base16_bytes32: str,
     traits_bytes32: str,
 ) -> str:
-    w3 = Web3(Web3.HTTPProvider(MINT_RPC_URL))
+    """
+    Sign a metadata hash and trait hex for minting
+    """
 
-    contract = w3.eth.contract(
+    web3 = Web3(Web3.HTTPProvider(MINT_RPC_URL))
+
+    contract = web3.eth.contract(
         address=Web3.toChecksumAddress(MINT_CONTRACT_ADDRESS),
         abi=MINT_CONTRACT_ABI,
     )
@@ -20,7 +32,7 @@ def sign(
         traits_bytes32,
     ).call()
 
-    if attribute_already_in_use == True:
+    if attribute_already_in_use is True:
         raise Exception("Attribute combination already in use")
 
     hash_to_sign: bytes = contract.functions.getTokenURIAndAttributeHash(
@@ -35,8 +47,8 @@ def sign(
     message_to_sign = messages.encode_defunct(primitive=hash_to_sign)
 
     # This part signs any EIP-191-valid message
-    signature: SignedMessage = Account.sign_message(
-        message_to_sign,
+    signature: SignedMessage = Account().sign_message(
+        signable_message=message_to_sign,
         private_key=MINT_SIGNER_PRIVATE_KEY,
     )
 
