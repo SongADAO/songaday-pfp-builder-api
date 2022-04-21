@@ -1,4 +1,5 @@
 import base64, pathlib, json, requests, math
+from datetime import datetime
 from PIL import Image
 from .config import MINT_RESOURCE_PATH, PINATA_API_KEY, PINATA_SECRET_API_KEY
 from .typings import *
@@ -45,9 +46,17 @@ def ipfs_hash_base16_to_bytes32(ipfs_hash_base16: str) -> str:
 def get_paths(output_folder_name: str) -> ResourcePaths:
     resource_path: str = MINT_RESOURCE_PATH
 
+    timestamp = datetime.timestamp(datetime.now())
+
     paths: ResourcePaths = {
-        "input": "{}/input".format(resource_path),
-        "output": "{}/output/{}".format(resource_path, output_folder_name),
+        "input": "{}/input".format(
+            resource_path,
+        ),
+        "output": "{}/output/{}/{}".format(
+            resource_path,
+            output_folder_name,
+            timestamp,
+        ),
     }
 
     # Create directory if it doesn't exist
