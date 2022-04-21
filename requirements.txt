@@ -1,6 +1,8 @@
 black>=22.3
 fastapi>=0.75
 gunicorn>=20.0
+pep8>=1.7
 Pillow>=9.0
+pylint>=2.13
 uvicorn[standard]>=0.15
 web3>=5.28
