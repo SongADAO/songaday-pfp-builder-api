@@ -6,17 +6,21 @@ import base64
 import json
 import math
 import pathlib
+import io
 from datetime import datetime
 import requests
 from PIL import Image
-from .config import MINT_RESOURCE_PATH, PINATA_JWT
+from .config import MINT_RESOURCE_PATH, PINATA_JWT, NFT_STORAGE_JWT
 from .typings import (
     Attributes,
     MetaData,
     PinataFiles,
+    PinataData,
     PinataHeaders,
+    NFTStorageHeaders,
     PinataKeyValues,
     PinataResponse,
+    NFTStorageResponse,
     PublishResponse,
     ResourcePaths,
     Traits,
@@ -174,41 +178,60 @@ def create_metadata(
 def pin_file_to_ipfs(
     path: str,
     name: str,
+    mime: str,
     keyvalues: PinataKeyValues,
 ) -> str:
     """
     Pin a file to IPFS
     """
 
-    pinata_api_url: str = "https://api.pinata.cloud/pinning/pinFileToIPFS"
+    if NFT_STORAGE_JWT != "":
+        return pin_file_to_ipfs_via_nft_storage(path, name, mime)
+    elif PINATA_JWT != "":
+        return pin_file_to_ipfs_via_pinata(path, name, mime, keyvalues)
+    else:
+        print("Missing Pinning Service Authorization Token")
+        raise Exception("Missing Pinning Service Authorization Token")
 
-    files: PinataFiles = [
-        ("file", (name, open(path, "rb"))),
-    ]
+
+def pin_file_to_ipfs_via_pinata(
+    path: str,
+    name: str,
+    mime: str,
+    keyvalues: PinataKeyValues,
+) -> str:
+    """
+    Pin a file to IPFS via Pinata
+    """
+
+    url: str = "https://api.pinata.cloud/pinning/pinFileToIPFS"
 
     headers: PinataHeaders = {
         "Accept": "application/json",
         "Authorization": f"Bearer {PINATA_JWT}",
     }
 
-    data = {
-        "pinataMetadata": json.dumps(
-            {
-                "keyvalues": keyvalues,
-            }
-        ),
+    file: io.BufferedReader = open(path, "rb")
+
+    files: PinataFiles = [
+        ("file", (name, file, mime)),
+    ]
+
+    data: PinataData = {
+        "pinataMetadata": json.dumps({"keyvalues": keyvalues}),
         "pinataOptions": json.dumps({"cidVersion": 1}),
     }
 
     response: requests.Response = requests.post(
-        url=pinata_api_url,
+        url=url,
         headers=headers,
         files=files,
         data=data,
     )
+    print(response)
 
     response_json: PinataResponse = response.json()
-    print(response.json())
+    print(response_json)
 
     if response.ok is False:
         print(f"Failed to PIN to IPFS: {name}")
@@ -219,6 +242,56 @@ def pin_file_to_ipfs(
         raise Exception("Failed to get IPFS hash")
 
     return response_json["IpfsHash"]
+
+
+def pin_file_to_ipfs_via_nft_storage(path: str, name: str, mime: str) -> str:
+    """
+    Pin a file to IPFS via NFT.Storage
+    """
+
+    url: str = "https://api.nft.storage/upload"
+
+    headers: NFTStorageHeaders = {
+        "Accept": "application/json",
+        "Authorization": f"Bearer {NFT_STORAGE_JWT}",
+    }
+
+    file: io.BufferedReader = open(path, "rb")
+
+    # files: PinataFiles = [
+    #     ("file", (name, file, mime)),
+    # ]
+
+    data: io.BufferedReader = file
+
+    response: requests.Response = requests.post(
+        url=url,
+        headers=headers,
+        # files=files,
+        data=data,
+    )
+    print(response)
+
+    response_json: NFTStorageResponse = response.json()
+    print(response_json)
+
+    if response.ok is False:
+        print(f"Failed to PIN to IPFS: {name}")
+        raise Exception("Failed to PIN to IPFS")
+
+    if "ok" not in response_json or response_json["ok"] is False:
+        print(f"Failed to get IPFS hash: {name}")
+        raise Exception("Failed to get IPFS hash")
+
+    if (
+        "value" not in response_json
+        or "cid" not in response_json["value"]
+        or response_json["value"]["cid"] == ""
+    ):
+        print(f"Failed to get IPFS hash: {name}")
+        raise Exception("Failed to get IPFS hash")
+
+    return response_json["value"]["cid"]
 
 
 def publish(
@@ -252,6 +325,7 @@ def publish(
     image_ipfs_hash: str = pin_file_to_ipfs(
         image_path,
         image_name,
+        "image/png",
         keyvalues,
     )
 
@@ -267,6 +341,7 @@ def publish(
     metadata_ipfs_hash: str = pin_file_to_ipfs(
         metadata_path,
         metadata_name,
+        "text/json",
         keyvalues,
     )
 

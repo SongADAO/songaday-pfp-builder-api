@@ -66,10 +66,22 @@ class PinataHeaders(TypedDict):
     Authorization: str
 
 
+class PinataData(TypedDict):
+    pinataMetadata: str
+    pinataOptions: str
+
+
+class NFTStorageHeaders(TypedDict):
+    Accept: str
+    Authorization: str
+
+
 PinataResponse = Dict[str, str]
 
+NFTStorageResponse = Dict[str, Dict[str, str]]
 
-PinataFiles = list[tuple[Literal["file"], tuple[str, io.BufferedReader]]]
+
+PinataFiles = list[tuple[Literal["file"], tuple[str, io.BufferedReader, str]]]
 
 
 class PublishResponse(TypedDict):
