@@ -6,10 +6,6 @@ import os
 
 MINT_RESOURCE_PATH = os.environ["MINT_RESOURCE_PATH"]
 
-PINATA_API_KEY = os.environ["PINATA_API_KEY"]
-
-PINATA_SECRET_API_KEY = os.environ["PINATA_SECRET_API_KEY"]
-
 PINATA_JWT = os.environ["PINATA_JWT"]
 
 MINT_RPC_URL = os.environ["MINT_RPC_URL"]

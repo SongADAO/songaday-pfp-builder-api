@@ -9,7 +9,7 @@ import pathlib
 from datetime import datetime
 import requests
 from PIL import Image
-from .config import MINT_RESOURCE_PATH, PINATA_API_KEY, PINATA_SECRET_API_KEY
+from .config import MINT_RESOURCE_PATH, PINATA_JWT
 from .typings import (
     Attributes,
     MetaData,
@@ -187,8 +187,8 @@ def pin_file_to_ipfs(
     ]
 
     headers: PinataHeaders = {
-        "pinata_api_key": PINATA_API_KEY,
-        "pinata_secret_api_key": PINATA_SECRET_API_KEY,
+        "Accept": "application/json",
+        "Authorization": f"Bearer {PINATA_JWT}",
     }
 
     data = {
@@ -207,12 +207,12 @@ def pin_file_to_ipfs(
         data=data,
     )
 
+    response_json: PinataResponse = response.json()
+    print(response.json())
+
     if response.ok is False:
         print(f"Failed to PIN to IPFS: {name}")
         raise Exception("Failed to PIN to IPFS")
-
-    response_json: PinataResponse = response.json()
-    print(response.json())
 
     if "IpfsHash" not in response_json or response_json["IpfsHash"] == "":
         print(f"Failed to get IPFS hash: {name}")

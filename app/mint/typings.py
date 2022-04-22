@@ -62,8 +62,8 @@ class ResourcePaths(TypedDict):
 
 
 class PinataHeaders(TypedDict):
-    pinata_api_key: str
-    pinata_secret_api_key: str
+    Accept: str
+    Authorization: str
 
 
 PinataResponse = Dict[str, str]
