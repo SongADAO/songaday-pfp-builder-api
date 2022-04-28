@@ -8,9 +8,9 @@ PYENV_VIRTUALENV_DISABLE_PROMPT=1
 
 eval "$(pyenv init -)"
 
-pyenv install 3.9.11
+pyenv install 3.10.3
 
-pyenv virtualenv 3.9.11 pfpbuilderapi
+pyenv virtualenv 3.10.3 pfpbuilderapi
 
 _OLD_VIRTUAL_PATH=""
 _OLD_VIRTUAL_PYTHONHOME=""

@@ -4,7 +4,7 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-docker pull python:3.9-alpine
+docker pull python:3.10-alpine
 
 docker compose -f docker-compose.release.yml build
 
