@@ -4,5 +4,5 @@ gunicorn>=20.0
 Pillow>=9.0
 pycodestyle>=2.8
 pylint>=2.13
-uvicorn[standard]>=0.15
-web3>=5.28
+uvicorn[standard]>=0.17
+web3==6.0.0-beta.2
