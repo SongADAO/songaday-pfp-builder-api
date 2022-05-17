@@ -99,6 +99,11 @@ class SignResponse(TypedDict):
     signature: str
 
 
+class MintRequest(TypedDict):
+    address: str
+    traits: InputTraits
+
+
 class MintResponse(TypedDict):
     traits: Traits
     traits_hex: str
