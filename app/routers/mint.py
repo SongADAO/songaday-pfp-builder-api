@@ -8,7 +8,8 @@ from typing import Dict, Union
 from fastapi import APIRouter, Request, Body, HTTPException
 from .config import URL_PREFIX
 from ..mint.mint import mint
-from ..mint.typings import InputTraits
+from ..mint.typings import InputTraits, MintRequest
+from ..verification.verification import is_verified
 
 router = APIRouter(
     prefix=f"{URL_PREFIX}/mint",
@@ -19,6 +20,7 @@ router = APIRouter(
 
 # http://localhost:5000/songadao-pfp-builder-api/mint/?traits={"base":"acapella","head":"airport","mood":"angry","beard":"beard","glasses":"hiphop","bottom":"acousticguitar","top":"baltimore"}
 # https://idchain.songadao.org/songadao-pfp-builder-api/mint/?traits={"base":"acapella","head":"airport","mood":"angry","beard":"beard","glasses":"hiphop","bottom":"acousticguitar","top":"baltimore"}
+# http://localhost:5000/songadao-pfp-builder-api/mint/?traits={"base":"acapella","head":"airport","mood":"angry","beard":"beard","glasses":"hiphop","bottom":"acousticguitar","top":"baltimore"}&address=0xD0D801c1053555726bdCF188F4A55e690C440E74
 
 
 def format_error(error: Union[str, Dict[str, str], Exception]):
@@ -64,6 +66,18 @@ async def mint_get(req: Request):
 
     payload: Dict[str, str] = dict(req.query_params)
 
+    # Verification
+    # --------------------------------------------------------------------------
+    if "address" not in payload:
+        error400("Missing address parameter")
+
+    try:
+        if is_verified(payload["address"]) is False:
+            raise Exception("Address is not a verified Song-a-Day Voter")
+    except Exception as error:
+        error400(error)
+    # --------------------------------------------------------------------------
+
     if "traits" not in payload:
         error400("Missing traits parameter")
 
@@ -82,12 +96,24 @@ async def mint_get(req: Request):
 
 
 @router.post("/")
-async def mint_post(payload: Dict[str, InputTraits] = Body(...)):
+async def mint_post(payload: MintRequest = Body(...)):
     """
     Mint API Route (POST)
     """
 
     print(payload)
+
+    # Verification
+    # --------------------------------------------------------------------------
+    if "address" not in payload:
+        error400("Missing address parameter")
+
+    try:
+        if is_verified(payload["address"]) is False:
+            raise Exception("Address is not a verified Song-a-Day Voter")
+    except Exception as error:
+        error400(error)
+    # --------------------------------------------------------------------------
 
     if "traits" not in payload:
         error400("Missing traits parameter")
