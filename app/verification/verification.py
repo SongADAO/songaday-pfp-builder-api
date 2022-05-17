@@ -23,15 +23,18 @@ def is_verified(address: str) -> bool:
     Check if the address is verified.
     """
 
+    if Web3.isAddress(address) is False:
+        raise Exception("Verification address is not a valid address")
+
+    if VERIFICATION_RPC_URL == "" or VERIFICATION_CONTRACT_ADDRESS == "":
+        return True
+
     web3 = Web3(Web3.WebsocketProvider(VERIFICATION_RPC_URL))
 
     contract = web3.eth.contract(
         address=Web3.toChecksumAddress(VERIFICATION_CONTRACT_ADDRESS),
         abi=VERIFICATION_CONTRACT_ABI,
     )
-
-    if Web3.isAddress(address) is False:
-        raise Exception("Verification address is not a valid address")
 
     is_verified_user: bool = contract.functions.isVerifiedUser(address).call()
 
