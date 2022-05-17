@@ -14,6 +14,7 @@ from .abi import MINT_CONTRACT_ABI
 
 
 def sign(
+    approved_address: str,
     metadata_ipfs_hash_base16_bytes32: str,
     traits_bytes32: str,
 ) -> str:
@@ -36,6 +37,7 @@ def sign(
         raise Exception("Attribute combination already in use")
 
     hash_to_sign: bytes = contract.functions.getTokenURIAndAttributeHash(
+        approved_address,
         metadata_ipfs_hash_base16_bytes32,
         traits_bytes32,
     ).call()

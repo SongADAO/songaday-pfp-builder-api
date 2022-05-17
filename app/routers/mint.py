@@ -66,20 +66,25 @@ async def mint_get(req: Request):
 
     payload: Dict[str, str] = dict(req.query_params)
 
-    # Verification
+    # Params
     # --------------------------------------------------------------------------
+
     if "address" not in payload:
         error400("Missing address parameter")
 
-    try:
-        if is_verified(payload["address"]) is False:
-            raise Exception("Address is not a verified Song-a-Day Voter")
-    except Exception as error:
-        error400(error)
-    # --------------------------------------------------------------------------
-
     if "traits" not in payload:
         error400("Missing traits parameter")
+
+    # Verification
+    # --------------------------------------------------------------------------
+    try:
+        if is_verified(payload["address"]) is False:
+            raise Exception("Address is not allowed to mint")
+    except Exception as error:
+        error400(error)
+
+    # Input Traits
+    # --------------------------------------------------------------------------
 
     try:
         input_traits: InputTraits = json.loads(payload["traits"])
@@ -87,8 +92,11 @@ async def mint_get(req: Request):
     except Exception:
         error400("Malformed traits parameter")
 
+    # Mint
+    # --------------------------------------------------------------------------
+
     try:
-        mint_data = mint(input_traits)
+        mint_data = mint(payload["address"], input_traits)
 
         return {"data": mint_data}
     except Exception as error:
@@ -103,26 +111,35 @@ async def mint_post(payload: MintRequest = Body(...)):
 
     print(payload)
 
-    # Verification
+    # Params
     # --------------------------------------------------------------------------
+
     if "address" not in payload:
         error400("Missing address parameter")
-
-    try:
-        if is_verified(payload["address"]) is False:
-            raise Exception("Address is not a verified Song-a-Day Voter")
-    except Exception as error:
-        error400(error)
-    # --------------------------------------------------------------------------
 
     if "traits" not in payload:
         error400("Missing traits parameter")
 
+    # Verification
+    # --------------------------------------------------------------------------
+
+    try:
+        if is_verified(payload["address"]) is False:
+            raise Exception("Address is not allowed to mint")
+    except Exception as error:
+        error400(error)
+
+    # Input Traits
+    # --------------------------------------------------------------------------
+
     input_traits: InputTraits = payload["traits"]
     print(input_traits)
 
+    # Mint
+    # --------------------------------------------------------------------------
+
     try:
-        mint_data = mint(input_traits)
+        mint_data = mint(payload["address"], input_traits)
 
         return {"data": mint_data}
     except Exception as error:

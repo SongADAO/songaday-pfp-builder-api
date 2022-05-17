@@ -19,7 +19,7 @@ from .typings import (
 )
 
 
-def mint(input_traits: InputTraits) -> MintResponse:
+def mint(approved_address: str, input_traits: InputTraits) -> MintResponse:
     """
     Take a set of traits, generate the image and metadata, and sign it
     """
@@ -40,11 +40,13 @@ def mint(input_traits: InputTraits) -> MintResponse:
     print(published)
 
     signature: str = sign(
+        approved_address,
         published["metadata_ipfs_hash_base16_bytes32"],
         traits_hex,
     )
 
     return {
+        "approved_address": approved_address,
         "traits": traits,
         "traits_hex": traits_hex,
         "traits_decimal": traits_decimal,

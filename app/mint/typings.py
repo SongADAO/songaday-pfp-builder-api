@@ -105,6 +105,7 @@ class MintRequest(TypedDict):
 
 
 class MintResponse(TypedDict):
+    approved_address: str
     traits: Traits
     traits_hex: str
     traits_decimal: int
