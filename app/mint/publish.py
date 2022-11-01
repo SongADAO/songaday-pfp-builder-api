@@ -16,8 +16,8 @@ from .typings import (
     MetaData,
     PinataFiles,
     PinataData,
-    PinataHeaders,
-    NFTStorageHeaders,
+    # PinataHeaders,
+    # NFTStorageHeaders,
     PinataKeyValues,
     PinataResponse,
     NFTStorageResponse,
@@ -206,7 +206,7 @@ def pin_file_to_ipfs_via_pinata(
 
     url: str = "https://api.pinata.cloud/pinning/pinFileToIPFS"
 
-    headers: PinataHeaders = {
+    headers = {
         "Accept": "application/json",
         "Authorization": f"Bearer {PINATA_JWT}",
     }
@@ -251,7 +251,7 @@ def pin_file_to_ipfs_via_nft_storage(path: str, name: str, mime: str) -> str:
 
     url: str = "https://api.nft.storage/upload"
 
-    headers: NFTStorageHeaders = {
+    headers = {
         "Accept": "application/json",
         "Authorization": f"Bearer {NFT_STORAGE_JWT}",
     }
